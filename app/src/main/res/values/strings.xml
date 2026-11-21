@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Heimboard</string>
+    <string name="auth_title">Heimboard verbinden</string>
+    <string name="auth_subtitle">Melde dich einmalig mit demselben Google-Konto wie in der Smartphone-Web-App an, um Termine, Einkäufe, Aufgaben, Müllkalender und Notizen in Echtzeit anzuzeigen.</string>
+    <string name="auth_sign_in_button">Mit Google anmelden</string>
+    <string name="auth_checking">Konto wird geprüft…</string>
+    <string name="module_calendar">Termine</string>
+    <string name="module_shopping">Einkaufszettel</string>
+    <string name="module_todos">Aufgaben</string>
+    <string name="module_todos_done_today">Heute erledigt</string>
+    <string name="module_trash">Müllkalender</string>
+    <string name="module_notes">Schwarzes Brett</string>
+    <string name="module_weather_loading">Wetter wird geladen…</string>
+    <string name="module_weather_error">Wetter offline</string>
+    <string name="empty_calendar">Keine kommenden Termine eingetragen</string>
+    <string name="empty_shopping">Einkaufszettel ist leer</string>
+    <string name="empty_todos">Alle Aufgaben für heute erledigt</string>
+    <string name="empty_notes">Keine aktuellen Notizen angepinnt</string>
+    <string name="empty_trash">Kein dringender Mülltermin</string>
+    <string name="trash_today">Heute Abholung</string>
+    <string name="trash_tomorrow_evening">Morgen Abholung</string>
+    <string name="trash_next_pickup">Nächste Abholung</string>
+    <string name="night_mode_badge">Ruhemodus aktiv</string>
+    <string name="tv_controls_title">Display-Steuerung</string>
+    <string name="tv_controls_subtitle">Burn-in-Risikominderung &amp; Layout-Optionen (keine Einbrenn-Garantie)</string>
+</resources>

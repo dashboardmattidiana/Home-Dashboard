@@ -1,0 +1,247 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Shared security primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDateStr(value) {
+      return value is string && value.size() == 10 && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidCreateTimestamps(data) {
+      return data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    function isValidUpdateTimestamps(data) {
+      return data.createdAt == existing().createdAt &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // Entity validators
+    function isValidHouseholdConfig(data) {
+      return data.partnerA is string && data.partnerA.size() >= 1 && data.partnerA.size() <= 40 &&
+             data.partnerB is string && data.partnerB.size() >= 1 && data.partnerB.size() <= 40 &&
+             data.cityName is string && data.cityName.size() >= 1 && data.cityName.size() <= 80 &&
+             data.latitude is number && data.latitude >= -90 && data.latitude <= 90 &&
+             data.longitude is number && data.longitude >= -180 && data.longitude <= 180 &&
+             data.nightModeEnabled is bool &&
+             data.nightModeStartHour is int && data.nightModeStartHour >= 0 && data.nightModeStartHour <= 23 &&
+             data.nightModeEndHour is int && data.nightModeEndHour >= 0 && data.nightModeEndHour <= 23;
+    }
+
+    function isValidCalendarEvent(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             isValidDateStr(data.eventDate) &&
+             data.eventTime is string && data.eventTime.size() <= 10 &&
+             data.assignee in ['both', 'partnerA', 'partnerB'] &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 40;
+    }
+
+    function isValidShoppingItem(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.quantity is string && data.quantity.size() <= 40 &&
+             data.checked is bool &&
+             data.addedBy is string && data.addedBy.size() >= 1 && data.addedBy.size() <= 40;
+    }
+
+    function isValidTodoItem(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+             data.completed is bool &&
+             data.completedBy is string && data.completedBy.size() <= 40 &&
+             (data.completedDate == '' || isValidDateStr(data.completedDate)) &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 40;
+    }
+
+    function isValidTrashPickup(data) {
+      return data.wasteType in ['restmuell', 'gelber_sack', 'papier', 'bio'] &&
+             isValidDateStr(data.pickupDate) &&
+             data.putOut is bool &&
+             data.putOutBy is string && data.putOutBy.size() <= 40 &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 40;
+    }
+
+    function isValidBoardNote(data) {
+      return data.message is string && data.message.size() >= 1 && data.message.size() <= 500 &&
+             data.author is string && data.author.size() >= 1 && data.author.size() <= 40 &&
+             data.pinned is bool;
+    }
+
+    match /users/{userId} {
+      // 1. Household Config
+      match /config/{configId} {
+        allow get: if isOwner(userId) && isValidId(configId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         configId == 'household' &&
+                         incoming().keys().hasAll([
+                           'partnerA', 'partnerB', 'cityName', 'latitude', 'longitude',
+                           'nightModeEnabled', 'nightModeStartHour', 'nightModeEndHour',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'partnerA', 'partnerB', 'cityName', 'latitude', 'longitude',
+                           'nightModeEnabled', 'nightModeStartHour', 'nightModeEndHour',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidHouseholdConfig(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         configId == 'household' &&
+                         isValidHouseholdConfig(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         (
+                           // Action: Toggle night mode
+                           incoming().diff(existing()).affectedKeys().hasOnly(['nightModeEnabled', 'updatedAt']) ||
+                           // Action: Update household profile & city settings
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'partnerA', 'partnerB', 'cityName', 'latitude', 'longitude',
+                             'nightModeEnabled', 'nightModeStartHour', 'nightModeEndHour', 'updatedAt'
+                           ])
+                         );
+        allow delete: if false;
+      }
+
+      // 2. Calendar Events
+      match /events/{eventId} {
+        allow get: if isOwner(userId) && isValidId(eventId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(eventId) &&
+                         incoming().keys().hasAll(['title', 'eventDate', 'eventTime', 'assignee', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['title', 'eventDate', 'eventTime', 'assignee', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         isValidCalendarEvent(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(eventId) &&
+                         isValidCalendarEvent(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         incoming().createdBy == existing().createdBy &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'eventDate', 'eventTime', 'assignee', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(eventId);
+      }
+
+      // 3. Shopping List
+      match /shopping/{itemId} {
+        allow get: if isOwner(userId) && isValidId(itemId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(itemId) &&
+                         incoming().keys().hasAll(['name', 'quantity', 'checked', 'addedBy', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['name', 'quantity', 'checked', 'addedBy', 'createdAt', 'updatedAt']) &&
+                         isValidShoppingItem(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(itemId) &&
+                         isValidShoppingItem(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         incoming().addedBy == existing().addedBy &&
+                         (
+                           // Action: Toggle checked state
+                           incoming().diff(existing()).affectedKeys().hasOnly(['checked', 'updatedAt']) ||
+                           // Action: Edit item details
+                           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'quantity', 'checked', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(itemId);
+      }
+
+      // 4. To-Do Tasks
+      match /todos/{todoId} {
+        allow get: if isOwner(userId) && isValidId(todoId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(todoId) &&
+                         incoming().keys().hasAll(['title', 'completed', 'completedBy', 'completedDate', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['title', 'completed', 'completedBy', 'completedDate', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         isValidTodoItem(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(todoId) &&
+                         isValidTodoItem(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         incoming().createdBy == existing().createdBy &&
+                         (
+                           // Action: Toggle completion with attribution
+                           incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'completedBy', 'completedDate', 'updatedAt']) ||
+                           // Action: Edit task title
+                           incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(todoId);
+      }
+
+      // 5. Trash Calendar
+      match /trash/{trashId} {
+        allow get: if isOwner(userId) && isValidId(trashId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(trashId) &&
+                         incoming().keys().hasAll(['wasteType', 'pickupDate', 'putOut', 'putOutBy', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['wasteType', 'pickupDate', 'putOut', 'putOutBy', 'createdBy', 'createdAt', 'updatedAt']) &&
+                         isValidTrashPickup(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(trashId) &&
+                         isValidTrashPickup(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         incoming().createdBy == existing().createdBy &&
+                         (
+                           // Action: Mark bin as put out
+                           incoming().diff(existing()).affectedKeys().hasOnly(['putOut', 'putOutBy', 'updatedAt']) ||
+                           // Action: Edit pickup date or waste type
+                           incoming().diff(existing()).affectedKeys().hasOnly(['wasteType', 'pickupDate', 'putOut', 'putOutBy', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(trashId);
+      }
+
+      // 6. Bulletin Board Notes
+      match /notes/{noteId} {
+        allow get: if isOwner(userId) && isValidId(noteId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(noteId) &&
+                         incoming().keys().hasAll(['message', 'author', 'pinned', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['message', 'author', 'pinned', 'createdAt', 'updatedAt']) &&
+                         isValidBoardNote(incoming()) &&
+                         isValidCreateTimestamps(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(noteId) &&
+                         isValidBoardNote(incoming()) &&
+                         isValidUpdateTimestamps(incoming()) &&
+                         incoming().author == existing().author &&
+                         (
+                           // Action: Pin / unpin note
+                           incoming().diff(existing()).affectedKeys().hasOnly(['pinned', 'updatedAt']) ||
+                           // Action: Edit note message
+                           incoming().diff(existing()).affectedKeys().hasOnly(['message', 'pinned', 'updatedAt'])
+                         );
+        allow delete: if isOwner(userId) && isValidId(noteId);
+      }
+    }
+  }
+}

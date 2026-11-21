@@ -1,0 +1,6 @@
+{
+  "name": "Heimboard",
+  "description": "Mid-Century Modern Familien-Dashboard für Android TV und Smartphone-Web-App mit Echtzeit-Firestore-Synchronisation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

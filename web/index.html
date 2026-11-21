@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1C1A17" />
+  <title>Heimboard · Familien-Eingabe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Top Partner Switcher Bar (nur Web-App, im LocalStorage gespeichert) -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-title">Heimboard</span>
+      </div>
+      <div id="partner-switcher" class="partner-switcher hidden" role="group" aria-label="Aktives Profil">
+        <button type="button" class="partner-btn" data-role="partnerA" id="btn-partner-a">Matti</button>
+        <button type="button" class="partner-btn" data-role="partnerB" id="btn-partner-b">Diana</button>
+      </div>
+    </header>
+
+    <!-- One-Time Google Sign-In Gate -->
+    <main id="auth-view" class="auth-view">
+      <section class="card auth-card">
+        <h1>Mit dem TV verbinden</h1>
+        <p class="muted">
+          Melde dich einmalig mit demselben Google-Konto wie auf deinem Philips Google TV an.
+          Danach wechselst du oben ohne Login zwischen beiden Namen.
+        </p>
+        <button type="button" id="btn-google-signin" class="btn btn-primary btn-lg">
+          Mit Google anmelden
+        </button>
+        <p id="auth-error" class="error-text hidden"></p>
+      </section>
+    </main>
+
+    <!-- Main Mobile Dashboard Input Views -->
+    <main id="main-view" class="main-view hidden">
+      <!-- Tab 1: Einkaufszettel -->
+      <section id="tab-shopping" class="tab-panel active">
+        <form id="form-shopping" class="card form-card">
+          <h2>Einkaufszettel</h2>
+          <div class="form-row">
+            <input type="text" id="input-shopping-name" placeholder="Artikel (z. B. Hafermilch)" maxlength="100" required />
+            <input type="text" id="input-shopping-qty" placeholder="Menge" maxlength="40" class="input-qty" />
+          </div>
+          <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        </form>
+        <div class="list-header">
+          <span>Aktuelle Liste</span>
+          <button type="button" id="btn-clear-checked" class="btn-link">Abgehakte löschen</button>
+        </div>
+        <ul id="list-shopping" class="item-list"></ul>
+      </section>
+
+      <!-- Tab 2: Aufgaben -->
+      <section id="tab-todos" class="tab-panel">
+        <form id="form-todo" class="card form-card">
+          <h2>Aufgaben</h2>
+          <div class="form-row">
+            <input type="text" id="input-todo-title" placeholder="Neue Aufgabe eingeben…" maxlength="140" required />
+            <button type="submit" class="btn btn-primary">Speichern</button>
+          </div>
+        </form>
+        <div class="list-header"><span>Offene &amp; heute erledigte Aufgaben</span></div>
+        <ul id="list-todos" class="item-list"></ul>
+      </section>
+
+      <!-- Tab 3: Kalender -->
+      <section id="tab-calendar" class="tab-panel">
+        <form id="form-event" class="card form-card">
+          <h2>Neuer Termin</h2>
+          <input type="text" id="input-event-title" placeholder="Titel (z. B. Zahnarzt, Abendessen)" maxlength="120" required />
+          <div class="form-row">
+            <input type="date" id="input-event-date" required />
+            <input type="time" id="input-event-time" />
+          </div>
+          <div class="assignee-row">
+            <label class="field-label">Betrifft:</label>
+            <div class="segmented" id="event-assignee-group">
+              <button type="button" class="seg-btn active" data-assignee="both">Beide</button>
+              <button type="button" class="seg-btn" data-assignee="partnerA" id="seg-partner-a">Matti</button>
+              <button type="button" class="seg-btn" data-assignee="partnerB" id="seg-partner-b">Diana</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Termin eintragen</button>
+        </form>
+        <div class="list-header"><span>Kommende Termine</span></div>
+        <ul id="list-events" class="item-list"></ul>
+      </section>
+
+      <!-- Tab 4: Müllkalender -->
+      <section id="tab-trash" class="tab-panel">
+        <form id="form-trash" class="card form-card">
+          <h2>Müllkalender</h2>
+          <div class="form-row">
+            <select id="input-trash-type" required>
+              <option value="restmuell">Restmüll</option>
+              <option value="gelber_sack">Gelber Sack</option>
+              <option value="papier">Papier</option>
+              <option value="bio">Biomüll</option>
+            </select>
+            <input type="date" id="input-trash-date" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Abholtermin eintragen</button>
+        </form>
+        <div class="list-header"><span>Anstehende Abholungen</span></div>
+        <ul id="list-trash" class="item-list"></ul>
+      </section>
+
+      <!-- Tab 5: Schwarzes Brett & Einstellungen -->
+      <section id="tab-board" class="tab-panel">
+        <form id="form-note" class="card form-card">
+          <h2>Schwarzes Brett</h2>
+          <textarea id="input-note-message" rows="3" placeholder="Nachricht für das TV-Display schreiben…" maxlength="500" required></textarea>
+          <button type="submit" class="btn btn-primary">Notiz anpinnen</button>
+        </form>
+        <div class="list-header"><span>Angepinnte Notizen</span></div>
+        <ul id="list-notes" class="item-list"></ul>
+
+        <form id="form-settings" class="card form-card settings-card">
+          <h2>Haushalt &amp; Wetterort</h2>
+          <div class="form-row">
+            <div>
+              <label class="field-label" for="input-partner-a">Name 1</label>
+              <input type="text" id="input-partner-a" maxlength="40" required />
+            </div>
+            <div>
+              <label class="field-label" for="input-partner-b">Name 2</label>
+              <input type="text" id="input-partner-b" maxlength="40" required />
+            </div>
+          </div>
+
+          <label class="field-label" for="input-city-search">Wohnort für TV-Wetter</label>
+          <div class="form-row">
+            <input type="text" id="input-city-search" placeholder="Stadt suchen (z. B. München)" maxlength="80" />
+            <button type="button" id="btn-city-search" class="btn btn-secondary">Suchen</button>
+          </div>
+          <div id="city-results" class="city-results hidden"></div>
+          <p id="selected-city-label" class="muted small"></p>
+
+          <label class="toggle-row">
+            <span>TV-Ruhemodus (reduzierte Helligkeit)</span>
+            <input type="checkbox" id="input-night-mode" />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Einstellungen speichern</button>
+          <p id="settings-feedback" class="success-text hidden"></p>
+          <button type="button" id="btn-signout" class="btn btn-outline">Google-Konto abmelden</button>
+        </form>
+      </section>
+    </main>
+
+    <!-- Bottom Mobile Navigation -->
+    <nav id="bottom-nav" class="bottom-nav hidden" aria-label="Module">
+      <button type="button" class="nav-btn active" data-tab="tab-shopping">Einkauf</button>
+      <button type="button" class="nav-btn" data-tab="tab-todos">Aufgaben</button>
+      <button type="button" class="nav-btn" data-tab="tab-calendar">Kalender</button>
+      <button type="button" class="nav-btn" data-tab="tab-trash">Müll</button>
+      <button type="button" class="nav-btn" data-tab="tab-board">Brett</button>
+    </nav>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

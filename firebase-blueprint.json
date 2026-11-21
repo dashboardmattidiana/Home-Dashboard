@@ -1,0 +1,308 @@
+{
+  "entities": {
+    "HouseholdConfig": {
+      "title": "HouseholdConfig",
+      "description": "Shared household profile names, weather location, and night mode schedule.",
+      "type": "object",
+      "properties": {
+        "partnerA": {
+          "type": "string",
+          "description": "Display name of the first partner (1-40 chars)."
+        },
+        "partnerB": {
+          "type": "string",
+          "description": "Display name of the second partner (1-40 chars)."
+        },
+        "cityName": {
+          "type": "string",
+          "description": "City name displayed for weather (1-80 chars)."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "City latitude for Open-Meteo API."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "City longitude for Open-Meteo API."
+        },
+        "nightModeEnabled": {
+          "type": "boolean",
+          "description": "Manual toggle for reduced-brightness quiet night mode."
+        },
+        "nightModeStartHour": {
+          "type": "integer",
+          "description": "Hour (0-23) when automatic night mode starts."
+        },
+        "nightModeEndHour": {
+          "type": "integer",
+          "description": "Hour (0-23) when automatic night mode ends."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "partnerA",
+        "partnerB",
+        "cityName",
+        "latitude",
+        "longitude",
+        "nightModeEnabled",
+        "nightModeStartHour",
+        "nightModeEndHour",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "Upcoming family calendar appointment.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Event title (1-120 chars)."
+        },
+        "eventDate": {
+          "type": "string",
+          "description": "ISO date YYYY-MM-DD (10 chars)."
+        },
+        "eventTime": {
+          "type": "string",
+          "description": "Optional HH:mm time string or empty string (0-10 chars)."
+        },
+        "assignee": {
+          "type": "string",
+          "enum": ["both", "partnerA", "partnerB"],
+          "description": "Which partner(s) the event concerns."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Name of partner who created the event (1-40 chars)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "title",
+        "eventDate",
+        "eventTime",
+        "assignee",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ShoppingItem": {
+      "title": "ShoppingItem",
+      "description": "Shared household shopping list item.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Item name (1-100 chars)."
+        },
+        "quantity": {
+          "type": "string",
+          "description": "Optional quantity text or empty string (0-40 chars)."
+        },
+        "checked": {
+          "type": "boolean",
+          "description": "Whether item is checked off."
+        },
+        "addedBy": {
+          "type": "string",
+          "description": "Name of partner who added the item (1-40 chars)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "name",
+        "quantity",
+        "checked",
+        "addedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TodoItem": {
+      "title": "TodoItem",
+      "description": "Household task with daily completion badge.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Task description (1-140 chars)."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed."
+        },
+        "completedBy": {
+          "type": "string",
+          "description": "Partner key or name who completed the task, or empty string (0-40 chars)."
+        },
+        "completedDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD date when completed, or empty string (0-10 chars)."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Partner who created the task (1-40 chars)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "title",
+        "completed",
+        "completedBy",
+        "completedDate",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TrashPickup": {
+      "title": "TrashPickup",
+      "description": "Scheduled waste pickup event with put-out confirmation.",
+      "type": "object",
+      "properties": {
+        "wasteType": {
+          "type": "string",
+          "enum": ["restmuell", "gelber_sack", "papier", "bio"],
+          "description": "Category of waste bin."
+        },
+        "pickupDate": {
+          "type": "string",
+          "description": "ISO date YYYY-MM-DD (10 chars)."
+        },
+        "putOut": {
+          "type": "boolean",
+          "description": "Whether bin has already been put out."
+        },
+        "putOutBy": {
+          "type": "string",
+          "description": "Partner who put the bin out, or empty string (0-40 chars)."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Partner who created the pickup entry (1-40 chars)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "wasteType",
+        "pickupDate",
+        "putOut",
+        "putOutBy",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BoardNote": {
+      "title": "BoardNote",
+      "description": "Pinned message on the family bulletin board.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Note text (1-500 chars)."
+        },
+        "author": {
+          "type": "string",
+          "description": "Partner who wrote the note (1-40 chars)."
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Whether the note is prominently pinned."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "message",
+        "author",
+        "pinned",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/config/{configId}": {
+      "schema": { "$ref": "#/entities/HouseholdConfig" },
+      "description": "Household configuration document (configId = 'household')."
+    },
+    "/users/{userId}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/CalendarEvent" },
+      "description": "Upcoming calendar appointments for the household."
+    },
+    "/users/{userId}/shopping/{itemId}": {
+      "schema": { "$ref": "#/entities/ShoppingItem" },
+      "description": "Shared live shopping list items."
+    },
+    "/users/{userId}/todos/{todoId}": {
+      "schema": { "$ref": "#/entities/TodoItem" },
+      "description": "Household tasks and daily completion status."
+    },
+    "/users/{userId}/trash/{trashId}": {
+      "schema": { "$ref": "#/entities/TrashPickup" },
+      "description": "Scheduled trash pickups and put-out status."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/BoardNote" },
+      "description": "Bulletin board free-text notes."
+    }
+  }
+}

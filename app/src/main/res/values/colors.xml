@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="espresso_bg">#FF1C1A17</color>
+    <color name="espresso_card">#FF2B2823</color>
+    <color name="walnut_card">#FF363127</color>
+    <color name="warm_cream">#FFF1E8D8</color>
+    <color name="terracotta">#FFB96C50</color>
+    <color name="olive">#FF858C68</color>
+    <color name="ochre">#FFC39B52</color>
+</resources>
